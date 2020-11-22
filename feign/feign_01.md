@@ -4,7 +4,7 @@
 
 断点调试：发现feign创建的request中headers为空
 
-![feign06](https://gitee.com/enioy/img/raw/master/docs/20201122215054.png)
+![](https://gitee.com/enioy/img/raw/master/docs/20201122215054.png)
 
 查看源码发现，在创建request前，会遍历RequestInterceptor并调用apply方法，默认容器中是没有RequestInterceptor的
 
@@ -49,7 +49,7 @@ public class FeignConfig {
 
 再次调试，请求头同步成功
 
-![feign08](https://gitee.com/enioy/img/raw/master/docs/20201122215139.png)
+![](https://gitee.com/enioy/img/raw/master/docs/20201122215139.png)
 
 总结：
 
@@ -65,7 +65,7 @@ public class FeignConfig {
 
 原因分析：上面获取老的请求，是通过RequestContextHolder.getRequestAttributes();查看源码，其实使用的是ThreadLocal，由于使用了线程池，导致异步调用时线程发生了改变，从而拿不到老的请求
 
-![feign09](https://gitee.com/enioy/img/raw/master/docs/20201122215152.png)
+![](https://gitee.com/enioy/img/raw/master/docs/20201122215152.png)
 
 解决办法：在异步调用开始前，把当前线程的requestAttributes()同步到异步线程中
 
@@ -75,7 +75,7 @@ RequestAttributes requestAttributes = RequestContextHolder.getRequestAttributes(
 RequestContextHolder.setRequestAttributes(requestAttributes);
 ```
 
- ![feign10](https://gitee.com/enioy/img/raw/master/docs/20201122215203.png)
+ ![](https://gitee.com/enioy/img/raw/master/docs/20201122215203.png)
 
 总结：
 
