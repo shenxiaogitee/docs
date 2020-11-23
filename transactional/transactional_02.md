@@ -49,13 +49,27 @@ insert into user(userid, name) values(1,'a',)如userid不是主键,可以重复,
 
   我们最好设计为先删除token,如果业务调用失败,就重新获取token再次请求
     
-6. Token获取、比较和删除必须是原子性
+6. Token比较和删除必须是原子性
 
-    (1) redis.get(token)、 token.equals、 redis.del(token)如果这两个操作不是原子,可能导致,高并发下,都get到同样的数据,判断都成功,继续业务并执行
+    (1) redis.get(token)、 token.equals、 redis.del(token)如果这两个操作不是原子,可能导致高并发下都get到同样的数据,判断都成功,继续业务并执行
 
     (2)可以在 redis使用lua脚本完成这个操作
 
     if redis.call('get',KEYS(1])==ARGV[1] then return redis.call('del, KEYS(1]) else return 0 end
+    
+    ```
+    // 原子验证令牌
+    String orderToken = orderSubmitVo.getOrderToken();
+    String script = "if redis.call('get',KEYS(1])==ARGV[1] then return redis.call('del, KEYS(1]) else return 0 end";
+    Long result = stringRedisTemplate.execute(new DefaultRedisScript<>(script, Long.class),
+            Arrays.asList(OrderConstant.USER_ORDER_TOKEN_PREFIX + memberVo.getId()),
+            orderToken);
+    if (result == 0) {
+        // 验证不通过
+    } else {
+        // 验证通过
+    }
+    ```
 
 ##### 2.各种锁机制
 
