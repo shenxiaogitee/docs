@@ -59,7 +59,7 @@ insert into user(userid, name) values(1,'a',)如userid不是主键,可以重复,
     if redis.call('get',KEYS[1])==ARGV[1] then return redis.call('del', KEYS[1]) else return 0 end
     ```
     
-    ```
+    ```java
     // 原子验证令牌
     String orderToken = orderSubmitVo.getOrderToken();
     String script = "if redis.call('get',KEYS[1])==ARGV[1] then return redis.call('del', KEYS[1]) else return 0 end";
