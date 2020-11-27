@@ -25,6 +25,7 @@
 
 
 #### 消息的TTL( Time To live)
+
 - 消息的TTL就是**消息的存活时间**
 
 - RabbitMQ可以对**队列**和**消息**分别设置TTL
@@ -36,6 +37,7 @@
 
 
 #### Dead Letter Exchanges(DLX)
+
 - 一个消息在满足如下条件下,**会进死信路由**,记住这里是路由而不是队列,一个路由可以对应很多队列。
 
   - 一个消息被Consume拒收了,并且reject方法的参数里requeue是false。也就是说不会被再次放在队列里,被其他消费者使用。(basic.reject/ basic.nack) requeue=false
@@ -74,7 +76,7 @@
 
 
 
-![](https://gitee.com/enioy/img/raw/master/K8S/20201126113256.png) 
+![](https://gitee.com/enioy/img/raw/master/K8S/20201127160521.png)  
 
   
 
@@ -123,14 +125,6 @@ public class MyRabbitConfig {
     public static final String STOCK_RELEASE_STOCK_QUEUE = "stock.release.stock.queue";
     public static final String STOCK_LOCKED_ROUTING_KEY = "stock.locked";
     public static final String STOCK_RELEASE_ROUTING_KEY = "stock.release.#";
-
-    /**
-     * 连上RabbitMQ
-     */
-    @RabbitListener(queues = MyRabbitConfig.STOCK_DELAY_QUEUE)
-    public void listener() {
-
-    }
 
     /**
      * 使用JSON序列号机制进行消息转换
@@ -188,5 +182,187 @@ public class MyRabbitConfig {
   
 
 #### 库存解锁的场景
+
 1. 下订单成功,订单过期没有支付被系统自动取消、被用户手动取消。都要解锁库存
 2. 下订单成功,库存锁定成功,接下来的业务调用失败,导致订单回滚,之前锁定的库存就要自动解锁。
+
+
+
+![](https://gitee.com/enioy/img/raw/master/K8S/20201127152350.png) 
+
+
+
+
+
+#### Spring Boot中使用延时队列
+1. Queue、 Exchange、 Binding可以@Bean进去
+
+2. 监听消息的方法可以有三种参数(不分数量,顺序)
+
+   Object content, Message message, Channel channel
+
+3. channel可以用来拒绝消息,否则自动ack;
+
+
+
+#### 如何保证消息可靠性
+
+##### 1.消息丢失
+
+- 消息发送出去,由于网络问题没有抵达服务器
+
+  - 做好容错方法(try- catch),发送消息可能会网络失败,失败后要有重试机制,可记录到数据库,采用定期扫描重发的方式
+
+  - 做好日志记录,每个消息状态是否都被服务器收到都应该记录
+
+  - 做好定期重发,如果消息没有发送成功,定期去数据库扫描未成功的消息进行重发
+
+  - ```sql
+    CREATE TABLE `mq_message` (
+      `message_id` char(32) NOT NULL,
+      `content` text,
+      `to_exchane` varchar(255) DEFAULT NULL,
+      `routing_key` varchar(255) DEFAULT NULL,
+      `class_type` varchar(255) DEFAULT NULL,
+      `message_status` int(1) DEFAULT '0' COMMENT '0-新建 1-已发送 2-错误抵达 3-已抵达',
+      `create_time` datetime DEFAULT NULL,
+      `update_time` datetime DEFAULT NULL,
+      PRIMARY KEY (`message_id`)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+    ```
+
+    ```java
+    // TODO 保证消息一定会发送出去，每一个消息都做好日志记录，定期扫描数据库将失败的消息再发送一遍
+    try {
+        rabbitTemplate.convertAndSend(MyMQConfig.ORDER_EVENT_EXCHANGE,
+                MyMQConfig.ORDER_RELEASE_OTHER_ROUTING_KEY,
+                orderTo);
+    } catch (Exception e) {
+    
+    }
+    ```
+
+- 消息抵达Broker, Broker要将消息写入磁盘(持久化)才算成功。此时Broker尚未持久化完成,宕机。
+
+  - publisher也必须加入确认回调机制,确认成功的消息,修改数据库消息状态。
+
+  - ```yaml
+     spring:
+       rabbitmq:
+         host: 192.168.1.110
+         port: 5672
+         virtual-host: /
+    #    开启发送端消息抵达 broker 的确认回调
+         publisher-confirm-type: correlated
+    #    开启发送端消息从 broker 抵达 queue 的确认回调【抵达失败回调，成功不回调】
+         publisher-returns: true
+    #    只要抵达 queue，以异步发送优先回调
+         template:
+           mandatory: true
+    ```
+
+    ```java
+    /**
+     * 定制 rabbitTemplate
+     */
+    @PostConstruct
+    public void initRabbitTemplate() {
+        rabbitTemplate.setConfirmCallback(new RabbitTemplate.ConfirmCallback() {
+            /**
+             * 设置消息抵达 broker 的确认回调
+             * 消息抵达broker，ack为true
+             * @param correlationData 当前消息的唯一关联数据
+             * @param ack 消息是否成功收到
+             * @param cause 失败的原因
+             */
+            @Override
+            public void confirm(CorrelationData correlationData, boolean ack, String cause) {
+                // TODO ack为true才说明消息成功到broker
+                if (!ack) {
+    
+                } else {
+    
+                }
+                System.out.println(correlationData + "," + ack + "," + cause);
+            }
+        });
+    
+        rabbitTemplate.setReturnCallback(new RabbitTemplate.ReturnCallback() {
+            /**
+             * 设置消息从 broker 抵达 queue 的确认回调
+             * 【抵达失败回调，成功不回调】
+             * @param message 投递失败的消息
+             * @param replyCode 失败回复的状态吗
+             * @param replyText 失败回复的原因
+             * @param exchange  发给哪个交换机
+             * @param routingKey 发送用的路由键
+             */
+            @Override
+            public void returnedMessage(Message message, int replyCode, String replyText, String exchange, String routingKey) {
+                // TODO 没发送到queue会回调这个方法
+                System.out.println(message + "," + replyCode + "," + replyText + "," + exchange + "," + routingKey);
+            }
+        });
+    }
+    ```
+
+- 自动ACK的状态下，消费者收到消息,但没来得及消息然后宕机
+
+  - 一定开启手动ACK,消费成功才移除,失败或者没来得及处理就 noAck并重新入队
+
+  - ```yaml
+    spring:
+      rabbitmq:
+    #    消费端手动ack
+        listener:
+          simple:
+            acknowledge-mode: manual
+    ```
+
+    ```java
+    @RabbitListener(queues = MyMQConfig.ORDER_RELEASE_ORDER_QUEUE)
+    @Service
+    public class OrderCloseListener {
+    
+        @Resource
+        private OrderService orderService;
+    
+        @RabbitHandler
+        public void handleCloseOrder(OrderCreateTo orderCreateTo, Message message, Channel channel) throws IOException {
+            System.out.println("收到关闭订单的信息");
+            try {
+                orderService.closeOrder(orderCreateTo);
+                channel.basicAck(message.getMessageProperties().getDeliveryTag(), false);
+            } catch (Exception e) {
+                channel.basicReject(message.getMessageProperties().getDeliveryTag(), true);
+            }
+        }
+    }
+    ```
+
+
+
+##### 2.消息重复
+- 消息消费成功,事务已经提交,ack时机器宕机。导致没有ack成功,Broker的消息重新由unack变为 ready,并发送给其他消费者
+
+- 消息消费失败,由于重试机制,自动又将消息发送出去
+
+  - 消费者的业务消费接口应该设计为**幂等性**的。比如扣库存有工作单的状态标志
+
+  - 使用**防重表**( redis/mysq),发送消息每一个都有业务的唯一标识,记录已经处理过的,处理过就不用处理
+
+  - rabbitMQ的每一个消息都有redelivered字段,可以获取**是否是被重新投递过来的**,而不是第一次投递过来的
+
+
+
+##### 3.消息积压
+
+- 消费者宕机积压
+
+- 消费者消费能力不足积压
+
+- 发送者发送流量太大
+
+  - 上线更多的消费者,进行正常消费
+
+  - 上线专门的队列消费服务,先将消息批量取出来,记录数据库,离线慢慢处理
