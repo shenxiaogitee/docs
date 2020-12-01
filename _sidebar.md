@@ -6,3 +6,5 @@
   * [加密](transactional/transactional_04_encrypt.md)
   * [内网穿透](transactional/transactional_05_natapp.md)
   * [订单](transactional/transactional_06_order.md)
+  * [秒杀](transactional/transactional_07_seckill.md)
+  * [定时任务](transactional/transactional_08_schedule.md)
