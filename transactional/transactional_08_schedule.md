@@ -49,3 +49,18 @@ spring:
         max-size: 50
         queue-capacity: 100000
 ```
+
+
+
+![](https://gitee.com/enioy/img/raw/master/K8S/20201205083358.png) 
+
+
+
+
+
+![](https://gitee.com/enioy/img/raw/master/K8S/20201205172648.png)
+
+
+
+ 
+
