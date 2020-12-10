@@ -8,6 +8,7 @@
   * [订单](transactional/transactional_06_order.md)
   * [秒杀](transactional/transactional_07_seckill.md)
   * [定时任务](transactional/transactional_08_schedule.md)
+  * [熔断降级](transactional/transactional_09_sentinel.md)
   * [文档](docs/doc.md)
   * [文档](docs/doc2.md)
   * [文档](docs/doc3.md)
