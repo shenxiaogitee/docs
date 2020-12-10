@@ -83,7 +83,7 @@ public class SentinelBlockExceptionHandler implements BlockExceptionHandler {
 
 
 
-#### 使用sentinel保护feign的远程调用
+#### 使用sentinel保护feign的远程调用,熔断降级
 
 
 
