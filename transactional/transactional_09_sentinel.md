@@ -77,7 +77,7 @@ public class SentinelBlockExceptionHandler implements BlockExceptionHandler {
 
 7.测试，快速刷新页面
 
-![](https://gitee.com/enioy/img/raw/master/K8S/20201210170634.png) 
+![](https://gitee.com/enioy/img/raw/master/K8S/20201210171554.png) 
 
 
 
