@@ -1,8 +1,8 @@
-#### sentinel
+#### ### sentinel
 
 
 
-##### sentinel使用
+#### 一：sentinel使用
 
 1.引依赖
 
@@ -83,11 +83,11 @@ public class SentinelBlockExceptionHandler implements BlockExceptionHandler {
 
 
 
-#### 使用sentinel保护feign的远程调用,熔断降级
+#### 二：使用sentinel保护feign的远程调用,熔断降级
 
 
 
-##### 一:调用方的熔断保护
+##### 1:调用方的熔断保护
 
 商品满足秒杀条件时商品页面
 
@@ -161,7 +161,7 @@ public class SeckillFeignServiceFallback implements SeckillFeignService {
 
 
 
-##### 二:调用方手动指定远程服务的降级策略
+##### 2:调用方手动指定远程服务的降级策略
 
 还是商品页面，有秒杀信息
 
@@ -199,4 +199,67 @@ public R getSkuSeckillInfo(@PathVariable("skuId") Long skuId) {
 
 
 ![](https://gitee.com/enioy/img/raw/master/K8S/20201210163249.png) 
+
+
+
+
+
+#### 三：网关限流
+
+1.引依赖
+
+```yaml
+<dependency>
+    <groupId>com.alibaba.cloud</groupId>
+    <artifactId>spring-cloud-alibaba-sentinel-gateway</artifactId>
+    <version>2.2.2.RELEASE</version>
+</dependency>
+```
+
+
+
+2.控制台效果
+
+![](https://gitee.com/enioy/img/raw/master/K8S/20201211090901.png) 
+
+3.测试
+
+![](https://gitee.com/enioy/img/raw/master/K8S/20201211092058.png) 
+
+默认限流返回
+
+![](https://gitee.com/enioy/img/raw/master/K8S/20201211092130.png) 
+
+您可以在 `GatewayCallbackManager` 注册回调进行定制：
+
+- `setBlockHandler`：注册函数用于实现自定义的逻辑处理被限流的请求，对应接口为 `BlockRequestHandler`。默认实现为 `DefaultBlockRequestHandler`，当被限流时会返回类似于下面的错误信息：`Blocked by Sentinel: FlowException`。
+
+
+
+自定义返回
+
+```java
+@Configuration
+public class SentinelGatewayConfig {
+
+    public SentinelGatewayConfig() {
+        GatewayCallbackManager.setBlockHandler(new BlockRequestHandler() {
+            // 网管限流回调
+            @Override
+            public Mono<ServerResponse> handleRequest(ServerWebExchange serverWebExchange, Throwable throwable) {
+                R r = R.error();
+                String s = JSON.toJSONString(r);
+                Mono<ServerResponse> body = ServerResponse.ok().body(Mono.just(s), String.class);
+                return body;
+            }
+        });
+    }
+}
+```
+
+
+
+![](https://gitee.com/enioy/img/raw/master/K8S/20201211095127.png)
+
+
 
