@@ -13,3 +13,4 @@
   * [文档](docs/doc.md)
   * [文档](docs/doc2.md)
   * [文档](docs/doc3.md)
+  * [notes](notes/notes.md)
