@@ -15,3 +15,4 @@
   * [文档](docs/doc3.md)
 * Maven
   * [Maven](maven/maven01.md)
+  * [notes](notes/notes.md)
