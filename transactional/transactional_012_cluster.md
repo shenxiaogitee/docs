@@ -65,3 +65,8 @@
 ![](https://gitee.com/enioy/img/raw/master/K8S/20201221160350.png) 
 
 https://shardingsphere.apache.org/document/current/cn/user-manual/shardingsphere-proxy/docker/
+
+
+
+![](https://gitee.com/enioy/img/raw/master/K8S/20201221163336.png) 
+
