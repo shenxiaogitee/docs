@@ -11,6 +11,7 @@
   * [sentinel](transactional/transactional_09_sentinel.md)
   * [链路追踪](transactional/transactional_010_sleuth.md)
   * [DevOps](transactional/transactional_011_devops.md)
+  * [集群](transactional/transactional_012_cluster.md)
   * [文档](docs/doc.md)
   * [文档](docs/doc2.md)
   * [文档](docs/doc3.md)
