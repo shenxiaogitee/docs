@@ -14,6 +14,7 @@
   * [MySQL集群](transactional/transactional_012_mysqlCluster.md)
   * [Redis集群](transactional/transactional_013_redisCluster.md)
   * [ES集群](transactional/transactional_014_esCluster.md)
+  * [RabbitMQ集群](transactional/transactional_015_rabbitmqCluster.md)
   * [文档](docs/doc.md)
   * [文档](docs/doc2.md)
   * [文档](docs/doc3.md)
