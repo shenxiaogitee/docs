@@ -75,3 +75,4 @@ https://shardingsphere.apache.org/document/current/cn/user-manual/shardingsphere
 #####  4.k8s有状态服务部署
 
 ![](https://gitee.com/enioy/img/raw/master/K8S/20201228110532.png) 
+
